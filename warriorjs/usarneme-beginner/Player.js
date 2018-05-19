@@ -1,5 +1,9 @@
 class Player {
-
+  // this.health to track player's health
+  constructor() {
+    this.health = 20
+  }
+  
   // warrior.think(Object.keys(warrior.feel()))
   // getLocation,getUnit,isEmpty,isStairs,isUnit,isWall
 
