@@ -22,13 +22,19 @@ class Player {
       return '\t' + attribute + ' : ' + this[attribute]
     }))
 
-    warrior.think('he is at location: ' + warrior.feel().getLocation() + ' with walls: ' + warrior.feel('right').isWall() ? 'R' : '' + warrior.feel('forward').isWall() ? 'F' : '' + warrior.feel('left').isWall() ? +'L' : '' + warrior.feel('backward').isWall() ? 'B' : '')
+    const wallSet = [
+      warrior.feel('forward').isWall() ? 'Forward' : null,
+      warrior.feel('right').isWall() ? 'Right' : null,
+      warrior.feel('left').isWall() ? 'Left' : null,
+      warrior.feel('backward').isWall() ? 'Backward' : null
+    ]
+    warrior.think('he is at location: ' + warrior.feel().getLocation() + ' with walls: ' + wallSet)
     warrior.think('his health last turn was: '+this.health+'. Now it is: '+warrior.health())
 
     // Direction logic 
     // if a wall is encountered, change direction
     if (warrior.feel().isWall()) {
-      warrior.think('there is a wall '+this.direction)
+      // warrior.think('there is a wall '+this.direction)
       if (this.direction == 'forward') {
         this.direction = 'backward'
       } else {
@@ -38,34 +44,6 @@ class Player {
       this.health = warrior.health() 
       return
     }
-
-    // // always start by moving to the left-most room
-    // if (warrior.feel().getLocation()[0] > 1 && this.direction == 'backward') {
-    //   // check to the left for a captive or enemy unit
-    //   if (warrior.feel('backward').isUnit()) {
-    //     // if it's a friendly
-    //     if (warrior.feel('backward').getUnit().isFriendly()) {
-    //       // ...rescue the captive
-    //       warrior.rescue('backward')
-    //       this.health = warrior.health() 
-    //       return
-    //     } else {
-    //       // ...otherwise attack the enemy
-    //       warrior.attack('backward')
-    //       this.health = warrior.health() 
-    //       return
-    //     }
-    //   } else {
-    //     warrior.walk('backward')
-    //     this.health = warrior.health() 
-    //     return
-    //   }
-    // }
-
-    // // Once the left-most area has been cleared, reset the direction to forward
-    // if (warrior.feel().getLocation()[0] == 1) {
-    //   this.direction = 'forward'
-    // }
 
     // Rest/Health Logic
 
