@@ -1,26 +1,14 @@
 class Player {
   constructor() {
     this.health = 20,
-    this.direction = 'forward'
-    this.needsHealing = false
+    this.direction = 'forward',
+    this.needsHealing = false,
+    this.shooting = false
   }
-  
-  // warrior.think(Object.keys(warrior.feel()))
-  // getLocation,getUnit,isEmpty,isStairs,isUnit,isWall
-
-  // getLocation = 1,0 etc
-
-  // warrior.think(Object.keys(warrior.feel().getUnit()))
-  // isHostile,isFriendly,isPlayer,isWarrior,isBound,isUnderEffect
-
-  // warrior.think(warrior.feel().isEmpty())
-  // no room = nothing, true or false otherwise
-
 
   playTurn(warrior) {
-    warrior.think(Object.keys(this).map(attribute => {
-      return '\t' + attribute + ' : ' + this[attribute]
-    }))
+    // Object.keys(this) => health, direction. needsHealing
+    warrior.think('\tHealth: '+warrior.health()+' Health last turn: '+this.health+'. Direction: '+this.direction+'. Needs Healing: '+this.needsHealing +'. Shooting: '+this.shooting)
 
     const wallSet = [
       warrior.feel('forward').isWall() ? 'Forward' : null,
@@ -28,8 +16,33 @@ class Player {
       warrior.feel('left').isWall() ? 'Left' : null,
       warrior.feel('backward').isWall() ? 'Backward' : null
     ]
-    warrior.think('he is at location: ' + warrior.feel().getLocation() + ' with walls: ' + wallSet)
-    warrior.think('his health last turn was: '+this.health+'. Now it is: '+warrior.health())
+
+    // warrior.feel().getLocation => x,y coordinates of the next room over
+    // -1 to the x coord to correct for it being the next room over (and there not being a warrior.getLocation() for the current room)
+    // warrior.feel().isEmpty() => no room = nothing, true or false otherwise
+    warrior.think('\tLocation [x,y]: [' + (warrior.feel('forward').getLocation()[0] - 1) + ',' + warrior.feel('forward').getLocation()[1] + ']. Walls: ' + wallSet + '. Forward empty: '+warrior.feel('forward').isEmpty() + '. Backward empty: '+warrior.feel('backward').isEmpty())
+    
+    // nearbySet is an array consisting of the next 3 rooms in the direction you are pointing
+    // Each of the three items in nearbySet contain the result of warrior.feel() for that room 
+    const nearbySet = warrior.look(this.direction)
+
+    // Object.keys(warrior.feel()) => getLocation,getUnit,isEmpty,isStairs,isUnit,isWall
+    // Object.keys(item) => same as above
+    nearbySet.forEach(item => {
+      warrior.think('\t\tRoom location: [' + item.getLocation() +
+       '] Empty: ' + item.isEmpty() + 
+       '. Stairs: ' + item.isStairs() +
+      '. Wall: ' + item.isWall() +
+      '. Unit: ' + item.isUnit()
+    )
+      if (item.isUnit()) {
+        const unit = item.getUnit()
+        warrior.think('\t\tUnit at '+ item.getLocation() +'. Friendly: '+unit.isFriendly()+'. Player: '+unit.isPlayer()+'. Warrior: '+unit.isWarrior()+'. Bound: '+unit.isBound()+' Under Effect: '+unit.isUnderEffect()+'.')
+      }
+    })
+
+    // End of Information Block
+
 
     // Direction logic 
     // if a wall is encountered, change direction
@@ -76,6 +89,10 @@ class Player {
     }
 
     // Adjacent unit Logic (full health)
+    // Object.keys(warrior.feel().getUnit()) => isHostile,isFriendly,isPlayer,isWarrior,isBound,isUnderEffect
+
+    // if there is no friendly between me and an enemy, shoot the enemy
+    // (nearbySet[0].getUnit() === undefined) if there is no unit there
 
     // attack enemy or rescue captive
     if (warrior.feel().isUnit()) {
