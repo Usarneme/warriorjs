@@ -2,13 +2,12 @@ class Player {
   constructor() {
     this.health = 20,
     this.direction = 'forward',
-    this.needsHealing = false,
-    this.shooting = false
+    this.needsHealing = false
   }
 
   playTurn(warrior) {
     // Object.keys(this) => health, direction. needsHealing
-    warrior.think('\tHealth: '+warrior.health()+' Health last turn: '+this.health+'. Direction: '+this.direction+'. Needs Healing: '+this.needsHealing +'. Shooting: '+this.shooting)
+    warrior.think('\tHealth: '+warrior.health()+' Health last turn: '+this.health+'. Direction: '+this.direction+'. Needs Healing: '+this.needsHealing)
 
     const wallSet = [
       warrior.feel('forward').isWall() ? 'Forward' : null,
@@ -40,7 +39,6 @@ class Player {
         warrior.think('\t\tUnit at '+ item.getLocation() +'. Friendly: '+unit.isFriendly()+'. Player: '+unit.isPlayer()+'. Warrior: '+unit.isWarrior()+'. Bound: '+unit.isBound()+' Under Effect: '+unit.isUnderEffect()+'.')
       }
     })
-
     // End of Information Block
 
 
@@ -66,7 +64,7 @@ class Player {
     }
 
     if (this.needsHealing) {
-      // If my health is decreasing (i.e.: I am under archer attack)
+      // If my health is decreasing (i.e.: I am under archer/mage attack)
       if (this.health > warrior.health()) {
         // ...change direction
         if (this.direction == 'forward') {
@@ -79,7 +77,7 @@ class Player {
         this.health = warrior.health()
         return
       }
-      // else There is no archer therefore it is safe to heal to full
+      // else There is no archer/mage therefore it is safe to heal to full
       warrior.rest()
       this.health = warrior.health()
       if (warrior.health() > 19) {
@@ -88,15 +86,31 @@ class Player {
       return  
     }
 
+    
     // Adjacent unit Logic (full health)
+
     // Object.keys(warrior.feel().getUnit()) => isHostile,isFriendly,isPlayer,isWarrior,isBound,isUnderEffect
 
-    // if there is no friendly between me and an enemy, shoot the enemy
-    // (nearbySet[0].getUnit() === undefined) if there is no unit there
+    const one = nearbySet[0].getUnit(),
+          two = nearbySet[1].getUnit(),
+          three = nearbySet[2].getUnit()
 
-    // attack enemy or rescue captive
+    // If there is an enemy two or three squares away...
+    if ( ((two !== undefined) && two.isHostile()) || ((three !== undefined) && three.isHostile()) ) {
+      // But also a friendly one or two squares away
+      if ( ((one !== undefined) && one.isFriendly()) || ((two !== undefined) && two.isFriendly()) ) {
+        // ...do nothing
+      } else {
+        // Shoot the enemy
+        warrior.shoot()
+        this.health = warrior.health() 
+        return
+      }
+    }
+
+    // Attack enemy or rescue adjacent square captive
     if (warrior.feel().isUnit()) {
-      // assigned for ease of reading code
+      // assigned to variable for ease of reading code
       const unit = warrior.feel().getUnit()
       warrior.think('unit ahead. \tFriendly: '+unit.isFriendly()+'.\tPlayer: '+unit.isPlayer()+'.\t Warrior: '+unit.isWarrior()+'.\tBound: '+unit.isBound()+'\tUnder Effect: '+unit.isUnderEffect()+'.')
       // if the adjacent room unit is a friend and bound
