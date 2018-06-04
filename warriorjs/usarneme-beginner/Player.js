@@ -88,23 +88,24 @@ class Player {
           }
         })
 
-        // Object.keys(warrior.feel().getUnit()) => isHostile,isFriendly,isPlayer,isWarrior,isBound,isUnderEffect
-        // each of the four directions (i) has 3 adjacent rooms (0,1,2)
-        const firstAdjacentRoom = roomsAhead[i][0].getUnit(),
-              secondAdjacentRoom = roomsAhead[i][1].getUnit(),
-              thirdAdjacentRoom = roomsAhead[i][2].getUnit()
+        // Each of the four directions (i) has 3 adjacent rooms (0,1,2)
+        const firstAdjacentRoom = roomsAhead[i][0],
+              secondAdjacentRoom = roomsAhead[i][1],
+              thirdAdjacentRoom = roomsAhead[i][2],
+              secondUnit = (secondAdjacentRoom.getUnit() !== undefined)
+
+        warrior.think('(secondAdjacentRoom.getUnit() !== undefined) : '+(secondAdjacentRoom.getUnit() !== undefined))
+        warrior.think('secondUnit : '+secondUnit)
+        warrior.think('secondAdjacentRoom.getUnit().isHostile() : '+secondAdjacentRoom.getUnit().isHostile())
 
         // If there is an enemy two or three squares away...
-        if ( ((secondAdjacentRoom !== undefined) && secondAdjacentRoom.isHostile()) || ((thirdAdjacentRoom !== undefined) && thirdAdjacentRoom.isHostile()) ) {
+        if ( (secondUnit && secondAdjacentRoom.getUnit().isHostile()) || ((thirdAdjacentRoom.getUnit() !== undefined) && thirdAdjacentRoom.getUnit().isHostile()) ) {
           // But also a friendly one or two squares away
-          if ( ((firstAdjacentRoom !== undefined) && firstAdjacentRoom.isFriendly()) || ((secondAdjacentRoom !== undefined) && secondAdjacentRoom.isFriendly()) ) {
+          if ( ((firstAdjacentRoom.getUnit() !== undefined) && firstAdjacentRoom.getUnit().isFriendly()) || ((secondAdjacentRoom.getUnit() !== undefined) && secondAdjacentRoom.getUnit().isFriendly()) ) {
             // ...do nothing
           } else {
             // ensure I am facing the enemy
-
-            warrior.think('\tX coord: '+this.xCoord+'. Enemy x coord: '+roomsAhead[i][1].getLocation()[0]+'. Facing: '+this.direction)
-
-            warrior.think( roomsAhead[i][1].getLocation()[0] )
+            warrior.think('\tX coord: '+this.xCoord+'. Enemy x coord: '+firstAdjacentRoom.getLocation()[0]+'. Facing: '+this.direction)
 
             if ( ((this.xCoord < roomsAhead[i][1].getLocation()[0]) && this.direction === 'forward') ) {
               warrior.think('a')
