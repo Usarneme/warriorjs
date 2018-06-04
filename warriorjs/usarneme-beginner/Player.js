@@ -4,10 +4,15 @@ class Player {
     this.direction = 'forward',
     this.needsHealing = false,
     this.firstTurn = true,
-    this.seenStairs = false
+    this.seenStairs = false,
+    this.xCoord,
+    this.yCoord
   }
 
   playTurn(warrior) {
+    // Set location
+    this.xCoord = (warrior.feel('forward').getLocation()[0] - 1)
+
     if (this.firstTurn) {
       this.direction = 'backward'
       warrior.pivot()
@@ -42,18 +47,18 @@ class Player {
     // warrior.feel().getLocation => x,y coordinates of the next room over
     // -1 to the x coord to correct for it being the next room over (and there not being a warrior.getLocation() for the current room)
     // warrior.feel().isEmpty() => no room = nothing, true or false otherwise
-    warrior.think('\tLocation [x,y]: [' + (warrior.feel('forward').getLocation()[0] - 1) + ',' + warrior.feel('forward').getLocation()[1] + ']. Walls: ' + walls + '. Forward empty: '+warrior.feel('forward').isEmpty() + '. Backward empty: '+warrior.feel('backward').isEmpty())
+    warrior.think('\tLocation [x,y]: [' + this.xCoord + ',' + warrior.feel('forward').getLocation()[1] + ']. Walls: ' + walls + '. Forward empty: '+warrior.feel('forward').isEmpty() + '. Backward empty: '+warrior.feel('backward').isEmpty())
     
     // roomsAhead arrays consist of the next 3 rooms in each direction left N, forward E, right S, backward W
     // Each of the three items in roomsAhead contain the result of warrior.feel() for that room 
+    // Object.keys(warrior.feel()) => getLocation,getUnit,isEmpty,isStairs,isUnit,isWall
     const roomsAhead = [
       warrior.feel('left').isWall() ? null : warrior.look('left'),
       warrior.feel('forward').isWall() ? null : warrior.look('forward'),
       warrior.feel('right').isWall() ? null : warrior.look('right'),
       warrior.feel('backward').isWall() ? null : warrior.look('backward')
     ]
-
-    warrior.think(roomsAhead[0] === null) // => true when there is a wall and thus no room that way
+    // warrior.think(roomsAhead[0] === null) // => true when there is a wall and thus no room that way
 
     // Check your surroundings, for each of the cardinal directions...
     for(let i=0; i<roomsAhead.length; i++) {
@@ -84,23 +89,57 @@ class Player {
         })
 
         // Object.keys(warrior.feel().getUnit()) => isHostile,isFriendly,isPlayer,isWarrior,isBound,isUnderEffect
-
-        const one = roomsAhead[i][0].getUnit(),
-              two = roomsAhead[i][1].getUnit(),
-              three = roomsAhead[i][2].getUnit()
+        // each of the four directions (i) has 3 adjacent rooms (0,1,2)
+        const firstAdjacentRoom = roomsAhead[i][0].getUnit(),
+              secondAdjacentRoom = roomsAhead[i][1].getUnit(),
+              thirdAdjacentRoom = roomsAhead[i][2].getUnit()
 
         // If there is an enemy two or three squares away...
-        if ( ((two !== undefined) && two.isHostile()) || ((three !== undefined) && three.isHostile()) ) {
+        if ( ((secondAdjacentRoom !== undefined) && secondAdjacentRoom.isHostile()) || ((thirdAdjacentRoom !== undefined) && thirdAdjacentRoom.isHostile()) ) {
           // But also a friendly one or two squares away
-          if ( ((one !== undefined) && one.isFriendly()) || ((two !== undefined) && two.isFriendly()) ) {
+          if ( ((firstAdjacentRoom !== undefined) && firstAdjacentRoom.isFriendly()) || ((secondAdjacentRoom !== undefined) && secondAdjacentRoom.isFriendly()) ) {
             // ...do nothing
           } else {
-            // TODO if the enemy is in front of me...
-            // Shoot the enemy
-            warrior.shoot()
-            this.health = warrior.health() 
-            return
-            // TODO else if the enemy is behind me, turn around
+            // ensure I am facing the enemy
+
+            warrior.think('\tX coord: '+this.xCoord+'. Enemy x coord: '+roomsAhead[i][1].getLocation()[0]+'. Facing: '+this.direction)
+
+            warrior.think( roomsAhead[i][1].getLocation()[0] )
+
+            if ( ((this.xCoord < roomsAhead[i][1].getLocation()[0]) && this.direction === 'forward') ) {
+              warrior.think('a')
+            }
+
+            // if ( ((this.xCoord < roomsAhead[i][1].getLocation()[0]) && this.direction === 'forward')) {
+            //   warrior.think('a')
+            // }
+            // if ( ((this.xCoord < roomsAhead[i][1].getLocation()[0]) && this.direction === 'forward')) {
+            //   warrior.think('a')
+            // }
+            // if ( ((this.xCoord < roomsAhead[i][1].getLocation()[0]) && this.direction === 'forward')) {
+            //   warrior.think('a')
+            // }
+
+            // Enemy is in front: 
+              // IF my x location is less than the enemy's x coord AND if I am facing forward/East
+              // OR
+              // IF my x location is greater than the enemy's x coord AND if I am face backward/West
+            if ( ((this.xCoord < roomsAhead[i][1].getLocation()[0]) && this.direction === 'forward') || 
+              ((this.xCoord < roomsAhead[i][2].getLocation()[0]) && this.direction === 'forward') ||
+              ((this.xCoord > roomsAhead[i][2].getLocation()[0]) && this.direction === 'backward') ||
+              ((this.xCoord > roomsAhead[i][2].getLocation()[0]) && this.direction === 'backward') ) {
+                warrior.think('\tshooting '+this.direction)
+                // Shoot the enemy
+                warrior.shoot()
+                this.health = warrior.health() 
+                return
+            } else {
+              warrior.think('/tpivoting from '+this.direction)
+              // else the enemy is behind me, turn around
+              warrior.pivot()
+              this.health = warrior.health() 
+              return      
+            }
           }
         }
 
